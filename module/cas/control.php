@@ -20,6 +20,8 @@ class cas extends control
 		//echo $gotoUrl;
 		//return;		
         $output = $this->cas->curl($gotoUrl, [], 'GET');
+        $userIP = $this->server->remote_addr;
+        $last = $this->server->request_time;
         $validateXML = json_decode($output,true);
         if ($validateXML["authenticationFailure"]) {
             echo "验证失败！";
@@ -78,6 +80,8 @@ class cas extends control
             $this->app->user = $this->session->user;
             $this->loadModel('action')->create('user', $user->id, 'login');
             $this->loadModel('score')->create('user', 'login');
+            $user->last     = date(DT_DATETIME1, $last);
+            $this->dao->update(TABLE_USER)->set('visits = visits + 1')->set('ip')->eq($userIP)->set('last')->eq($last)->where('account')->eq($user->account)->exec();
             /* Keep login. */
             if($this->post->keepLogin) $this->user->keepLogin($user);
 	    echo js::locate($this->createLink($this->config->default->module), 'parent');
